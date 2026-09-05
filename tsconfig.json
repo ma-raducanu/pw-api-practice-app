@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "types": [
+      "node",
+      "@playwright/test"
+    ],
+  },
+}
