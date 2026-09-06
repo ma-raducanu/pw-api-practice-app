@@ -6,7 +6,10 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "npx playwright test",
+    "debug": "npx playwright test --debug"
+  },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.4.1"
