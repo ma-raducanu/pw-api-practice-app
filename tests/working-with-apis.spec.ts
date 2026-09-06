@@ -56,13 +56,41 @@ test('Delete an article', async ({ page, request }) => {
   });
   expect(newArticleResponse.status()).toEqual(201);
   await page.goto('https://conduit.bondaracademy.com/');
-  await page.getByRole('link', { name: 'Sign in' }).click();
-  await page.getByRole('textbox', { name: 'Email' }).fill('mircea.alexandru.vi.raducanu@gmail.com');
-  await page.getByRole('textbox', { name: 'Password' }).fill('Testing123!');
-  await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.locator('.preview-link h1').first()).toContainText('Playwright API Automation');
-  await page.getByText('Playwright API Automation').click();
+  await page.getByRole('link', { name: 'Playwright API Automation' }).click();
   await page.getByRole('button', { name: 'Delete Article' }).first().click();
   await page.waitForResponse('https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0') // wait for the response to make sure that assertion is made when the application is in the loaded state
   await expect(page.locator('.preview-link h1').first()).not.toContainText('Playwright API Automation');
+});
+
+test('Create an article', async ({ page, request }) => {
+  await page.goto('https://conduit.bondaracademy.com/');
+  await page.getByRole('link', { name: 'New Article' }).click();
+  await page.getByRole('textbox', { name: 'Article Title' }).fill('Playwright API Automation');
+  await page.getByRole('textbox', { name: `What's this article about?` }).fill('How to automate APIs with Playwright');
+  await page.getByRole('textbox', { name: 'Write your article (in markdown)' }).fill('I like automating APIs with Playwright');
+  await page.getByRole('button', { name: 'Publish Article' }).click();
+  const createArticleResponse = await page.waitForResponse('https://conduit-api.bondaracademy.com/api/articles/')
+  const articleResponseJSON = await createArticleResponse.json();
+  const slugId = articleResponseJSON.article.slug;
+  await expect(page.locator('.article-page h1').first()).toContainText('Playwright API Automation');
+  await page.getByRole('link', { name: 'Home' }).click();
+  await expect(page.locator('.article-preview h1').first()).toContainText('Playwright API Automation');
+  const loginResponse = await request.post('https://conduit-api.bondaracademy.com/api/users/login', {
+    data: {
+      "user": {
+        "email": "mircea.alexandru.vi.raducanu@gmail.com",
+        "password": "Testing123!"
+      }
+    }
+  });
+  expect(loginResponse.status()).toEqual(200);
+  const responseLoginJSON = await loginResponse.json();
+  const token = responseLoginJSON.user.token;
+  const deleteResponse = await request.delete(`https://conduit-api.bondaracademy.com/api/articles/${slugId}`, {
+    headers: {
+      'Authorization': `Token ${token}`
+    }
+  });
+  expect(deleteResponse.status()).toEqual(204);
 });
